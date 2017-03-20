@@ -38,3 +38,5 @@ Run `python prep_corpus.py` to generate a sample of twitter statuses for the use
 you wish to parody.
 
 Run `bot.py` which will run a bot forever that will post a status every 5 minutes.
+
+## Wercker Pipeline
