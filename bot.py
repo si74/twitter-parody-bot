@@ -1,33 +1,44 @@
 import markovify
-from time import sleep
+import time
 import twitter
+import os
 
-consumer_key = os.environ['consumer_key']
-consumer_secret = os.environ['consumer_secret']
-access_token_key = os.environ['access_token_key']
-access_token_secret = os.environ['access_token_secret']
-username = os.environ['username']
+class TwitterBot(object):
+    def __init__(self, consumer_key, consumer_secret,access_token_key, access_token_secret, text):
+        # initialize twitter Api object
+        self.api = twitter.Api(consumer_key=consumer_key,
+                              consumer_secret=consumer_secret,
+                              access_token_key=access_token_key,
+                              access_token_secret=access_token_secret)
+        # initialize markov model
+        self.model = text_model = markovify.NewlineText(text)
 
-api = twitter.Api(consumer_key=consumer_key,
-                      consumer_secret=consumer_secret,
-                      access_token_key=access_token_key,
-                      access_token_secret=access_token_secret)
+    def tweet(self, interval):
+        while(True):
+            sentence = self.model.make_short_sentence(140)
+            print sentence
+            try:
+                self.api.PostUpdate(sentence)
+            except Exception as inst:
+                print inst # catch most exceptions but continue
+                continue
+            time.sleep(interval)
 
-# Get raw text as string.
-with open("output.txt") as f:
-    text = f.read()
+if __name__ == "__main__":
+    consumer_key = os.environ['consumer_key']
+    consumer_secret = os.environ['consumer_secret']
+    access_token_key = os.environ['access_token_key']
+    access_token_secret = os.environ['access_token_secret']
 
-# Build the model.
-text_model = markovify.Text(text)
+    # Get raw text as string.
+    with open("data/output.txt") as f:
+        text = f.read()
 
-#Bot tweeting every five minutes
-def tweet_something(name):
-    sentence = text_model.make_short_sentence(140)
-    api.PostUpdate(sentence)
+    # initialize twitterBot
+    bot = TwitterBot(consumer_key, consumer_secret, access_token_key, access_token_secret, text)
 
-print "starting..."
-rt = RepeatedTimer(1, hello, "World") # it auto-starts, no need of rt.start()
-try:
-    sleep(300) #
-finally:
-    rt.stop() # better in a try/finally block to make sure the program ends!
+    print "starting..."
+    try:
+        bot.tweet(5) #bot currently tweets every 5 seconds
+    except KeyboardInterrupt:
+        print "stopping parody bot"
