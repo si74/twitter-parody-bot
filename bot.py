@@ -39,6 +39,6 @@ if __name__ == "__main__":
 
     print "starting..."
     try:
-        bot.tweet(5) #bot currently tweets every 5 seconds
+        bot.tweet(300) #bot currently tweets every 5 seconds
     except KeyboardInterrupt:
         print "stopping parody bot"
