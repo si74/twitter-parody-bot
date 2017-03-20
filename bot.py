@@ -30,6 +30,11 @@ if __name__ == "__main__":
     access_token_key = os.environ['access_token_key']
     access_token_secret = os.environ['access_token_secret']
 
+    print consumer_key
+    print consumer_secret
+    print access_token_key
+    print access_token_secret
+
     # Get raw text as string.
     with open("data/output.txt") as f:
         text = f.read()

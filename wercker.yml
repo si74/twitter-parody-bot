@@ -1,0 +1,50 @@
+box: python:2.7.13
+dev:
+  steps:
+    - pip-install
+    - internal/watch:
+      code: |
+        python bot.py
+      reload: true
+build:
+  steps:
+    - pip-install
+deploy:
+  steps:
+    - pip-install
+    - internal/docker-push:
+      username: $DOCKER_USERNAME
+      password: $DOCKER_PASSWORD
+      repository: $REPO_NAME
+      # note: wercker adds all source files to the subdirectory below
+      cmd: /bin/bash -c "cd /pipeline/source && python bot.py"
+    - add-ssh-key:
+      keyname: DO
+    - add-to-known_hosts:
+      hostname: $HOSTNAME
+    - script:
+      # using a private registry so need to authenticate
+      name: authenticate to docker
+      code: ssh root@$HOSTNAME docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - script:
+      name: pull latest image
+      code: ssh root@$HOSTNAME docker pull $REPO_NAME:latest
+    - script:
+        name: stop running container
+        code: ssh root@$HOSTNAME docker stop parodybot || echo ‘failed to stop running container’
+    - script:
+        name: remove stopped container
+        code: ssh root@$HOSTNAME docker rm parodybot || echo ‘failed to remove stopped container’
+    - script:
+        name: remove image behind stopped container
+        code: ssh root@$HOSTNAME docker rmi $REPO_NAME:current || echo ‘failed to remove image behind stopped container’
+    - script:
+        name: tag newly pulled image
+        code: ssh root@$HOSTNAME docker tag $REPO_NAME:latest $REPO_NAME:current
+    - script:
+        name: run new container
+        code: ssh root@$HOSTNAME docker run -d -e "consumer_key=$consumer_key" \
+          -e "consumer_secret=$consumer_secret" \
+          -e "access_token_key=$access_token_key" \
+          -e "access_token_secret=$access_token_secret" \
+          --name parodybot $REPO_NAME:current
